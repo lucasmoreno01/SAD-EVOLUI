@@ -79,16 +79,19 @@ public class DashboardService {
 
         Map<YearMonth, Long> monthMap = new TreeMap<>();
         YearMonth lastMonth = YearMonth.now(ZoneOffset.UTC);
-        for (int index = 5; index >= 0; index--) monthMap.put(lastMonth.minusMonths(index), 0L);
+        YearMonth firstMonth = from == null ? lastMonth.minusMonths(5) : YearMonth.from(from);
+        YearMonth finalMonth = to == null ? lastMonth : YearMonth.from(to);
+        for (YearMonth month = firstMonth; !month.isAfter(finalMonth); month = month.plusMonths(1)) monthMap.put(month, 0L);
         feedbacks.forEach(feedback -> { YearMonth month = YearMonth.from(feedback.getSubmittedAt().atZone(ZoneOffset.UTC)); if (monthMap.containsKey(month)) monthMap.compute(month, (key, value) -> value + 1); });
         List<MonthlyCount> monthly = monthMap.entrySet().stream().map(entry -> new MonthlyCount(entry.getKey().format(DateTimeFormatter.ofPattern("yyyy-MM")), entry.getValue())).toList();
 
         List<IssueHighlight> issues = latestIssueGroups(ownerId, projectId, applicationId, feedbackIds);
         Map<String, Long> improvementStatuses = new LinkedHashMap<>();
+        var scopedImprovements = improvementRepository.findAllOwned(ownerId).stream()
+                .filter(item -> projectId == null || item.getApplication().getProject().getId().equals(projectId))
+                .filter(item -> applicationId == null || item.getApplication().getId().equals(applicationId)).toList();
         for (ImprovementStatus status : ImprovementStatus.values()) {
-            long count = improvementRepository.findAllOwned(ownerId).stream().filter(item -> item.getStatus() == status)
-                    .filter(item -> projectId == null || item.getApplication().getProject().getId().equals(projectId))
-                    .filter(item -> applicationId == null || item.getApplication().getId().equals(applicationId)).count();
+            long count = scopedImprovements.stream().filter(item -> item.getStatus() == status).count();
             improvementStatuses.put(status.name(), count);
         }
         List<PriorityHighlight> priorities = decisionRunRepository.findFirstByCreatedByIdOrderByCreatedAtDesc(ownerId)

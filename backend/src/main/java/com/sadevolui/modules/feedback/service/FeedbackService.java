@@ -9,7 +9,10 @@ import com.sadevolui.modules.application.repository.ApplicationRepository;
 import com.sadevolui.modules.feedback.dto.FeedbackRequest;
 import com.sadevolui.modules.feedback.dto.FeedbackResponse;
 import com.sadevolui.modules.feedback.entity.Feedback;
+import com.sadevolui.modules.feedback.entity.FeedbackSource;
 import com.sadevolui.modules.feedback.repository.FeedbackRepository;
+import com.sadevolui.modules.user.entity.UserAccount;
+import com.sadevolui.modules.user.repository.UserRepository;
 import com.sadevolui.shared.exception.ConflictException;
 import com.sadevolui.shared.exception.ResourceNotFoundException;
 
@@ -18,10 +21,12 @@ import com.sadevolui.shared.exception.ResourceNotFoundException;
 public class FeedbackService {
     private final FeedbackRepository feedbackRepository;
     private final ApplicationRepository applicationRepository;
+    private final UserRepository userRepository;
 
-    public FeedbackService(FeedbackRepository feedbackRepository, ApplicationRepository applicationRepository) {
+    public FeedbackService(FeedbackRepository feedbackRepository, ApplicationRepository applicationRepository, UserRepository userRepository) {
         this.feedbackRepository = feedbackRepository;
         this.applicationRepository = applicationRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -38,20 +43,21 @@ public class FeedbackService {
     }
 
     public FeedbackResponse create(FeedbackRequest request, UUID ownerId) {
-        return createForApplication(request, findApplication(request.applicationId(), ownerId));
+        UserAccount creator = userRepository.findById(ownerId).orElseThrow(() -> new ResourceNotFoundException("Usuário", ownerId));
+        return createForApplication(request, findApplication(request.applicationId(), ownerId), creator, FeedbackSource.MANUAL);
     }
 
     public FeedbackResponse createExternal(FeedbackRequest request) {
-        return createForApplication(request, findApplication(request.applicationId(), null));
+        return createForApplication(request, findApplication(request.applicationId(), null), null, FeedbackSource.EXTERNAL);
     }
 
-    private FeedbackResponse createForApplication(FeedbackRequest request, ManagedApplication application) {
+    private FeedbackResponse createForApplication(FeedbackRequest request, ManagedApplication application, UserAccount creator, FeedbackSource source) {
         String comment = request.comment().trim();
         if (feedbackRepository.existsByApplicationIdAndRatingAndCommentAndSubmittedAt(
                 application.getId(), (short) request.rating(), comment, request.submittedAt())) {
             throw new ConflictException("Este feedback já está registrado para o aplicativo e a data informados.");
         }
-        return toResponse(feedbackRepository.save(new Feedback(application, request.rating(), comment, request.submittedAt())));
+        return toResponse(feedbackRepository.save(new Feedback(application, creator, source, request.rating(), comment, request.submittedAt())));
     }
 
     public FeedbackResponse update(UUID id, FeedbackRequest request, UUID ownerId) {
@@ -86,6 +92,6 @@ public class FeedbackService {
 
     private static FeedbackResponse toResponse(Feedback feedback) {
         ManagedApplication application = feedback.getApplication();
-        return new FeedbackResponse(feedback.getId(), application.getId(), application.getName(), application.getProject().getId(), application.getProject().getName(), feedback.getRating(), feedback.getComment(), feedback.getSubmittedAt(), feedback.getCreatedAt());
+        return new FeedbackResponse(feedback.getId(), application.getId(), application.getName(), application.getProject().getId(), application.getProject().getName(), feedback.getRating(), feedback.getComment(), feedback.getSubmittedAt(), feedback.getCreatedAt(), feedback.getSource().name());
     }
 }

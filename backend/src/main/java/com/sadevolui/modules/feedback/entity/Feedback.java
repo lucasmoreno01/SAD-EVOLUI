@@ -3,6 +3,7 @@ package com.sadevolui.modules.feedback.entity;
 import java.time.Instant;
 import java.util.UUID;
 import com.sadevolui.modules.application.entity.ManagedApplication;
+import com.sadevolui.modules.user.entity.UserAccount;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,11 +39,21 @@ public class Feedback {
     @Column(name = "submitted_at", nullable = false)
     private Instant submittedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private UserAccount createdBy;
+
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private FeedbackSource source;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public Feedback(ManagedApplication application, int rating, String comment, Instant submittedAt) {
+    public Feedback(ManagedApplication application, UserAccount createdBy, FeedbackSource source, int rating, String comment, Instant submittedAt) {
+        this.createdBy = createdBy;
+        this.source = source;
         update(application, rating, comment, submittedAt);
     }
 

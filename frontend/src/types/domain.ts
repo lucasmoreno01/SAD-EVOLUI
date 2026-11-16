@@ -34,6 +34,7 @@ export type Feedback = {
   comment: string
   submittedAt: string
   createdAt: string
+  source: 'MANUAL' | 'EXTERNAL'
 }
 
 export type FeedbackInput = {

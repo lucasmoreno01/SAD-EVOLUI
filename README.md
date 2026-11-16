@@ -21,12 +21,11 @@ sad-evolui/
 
 ## Pré-requisitos
 
-- Java 21
+- Java 17 ou superior
 - Maven 3.6.3 ou superior
 - Node.js 20.19+ ou 22.12+
 - npm
 - Docker com Docker Compose
-- Java 17
 
 ## Configurar ambiente
 
@@ -90,7 +89,7 @@ A API exige JWT em todas as rotas de gestão, exceto cadastro/login, Swagger e r
 
 Sistemas externos podem registrar avaliações pelo endpoint `POST /api/integrations/feedbacks`. Configure `INTEGRATION_API_KEY` no `.env` com uma chave aleatória longa e compartilhe-a somente com a integração autorizada. O endpoint exige essa chave no header `X-API-Key`; sem ela, retorna `401`.
 
-O corpo usa o identificador do aplicativo já cadastrado, nota de 1 a 5, comentário e data em ISO 8601 UTC. A resposta `201` retorna o feedback criado. Reenvios exatos para o mesmo aplicativo são recusados como duplicidade (`409`). A chave é compartilhada entre as integrações deste ambiente; ela não substitui autenticação de usuário ou isolamento de acesso por cliente.
+O corpo usa o identificador do aplicativo já cadastrado, nota de 1 a 5, comentário e data em ISO 8601 UTC. A resposta `201` retorna o feedback com origem `EXTERNAL`; a tela diferencia essas avaliações das inseridas manualmente. Reenvios exatos para o mesmo aplicativo são recusados como duplicidade (`409`). A chave é compartilhada entre as integrações deste ambiente; ela não substitui autenticação de usuário ou isolamento de acesso por cliente.
 
 ```sh
 curl -X POST http://localhost:8080/api/integrations/feedbacks \
