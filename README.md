@@ -76,7 +76,7 @@ Comandos úteis: `npm run lint` e `npm run build`.
 - Análises reproduzíveis: sentimento pela nota (1–2 negativo, 3 neutro, 4–5 positivo), categoria por regras de palavras-chave e grupos candidatos por similaridade Jaccard. A API identifica a versão do método; essas regras não são um modelo treinado. A classificação pode ser corrigida manualmente, mantendo o valor automático original.
 - Estatísticas descritivas: média, mediana, moda, mínimo, máximo, desvio padrão populacional, contagens por sentimento e categoria, evolução mensal e problemas agrupados. O dashboard aceita filtros `projectId`, `applicationId`, `from` e `to` em `/api/dashboard/summary`.
 - Melhorias com avaliações de impacto, urgência, frequência e esforço de 1 a 5 e origem/justificativa registrada.
-- Rodadas SAW com pesos informados pelo gestor que devem totalizar 1. Benefícios usam valor dividido pelo maior; esforço usa menor dividido pelo valor. Histórico guarda pesos, dados originais, normalizações e pontuação.
+- Rodadas SAW com importâncias relativas definidas pelo gestor (0 a 10), normalizadas automaticamente para totalizar 1. Benefícios usam valor dividido pelo maior; esforço usa menor dividido pelo valor. Histórico guarda os pesos normalizados, dados originais, normalizações e pontuação.
 - Categorias padrão: desempenho, autenticação, interface, navegação, estabilidade, funcionalidades e outros. Contas podem criar categorias próprias.
 
 Execute os testes do backend com `cd backend && mvn test`.

@@ -18,7 +18,9 @@ class JwtServiceTest {
     @Test
     void rejectsModifiedToken() {
         String token = service.generateToken(UUID.randomUUID(), "user@example.com");
-        String modified = token.substring(0, token.length() - 1) + (token.endsWith("a") ? "b" : "a");
+        String[] parts = token.split("\\.");
+        String signature = (parts[2].charAt(0) == 'A' ? "B" : "A") + parts[2].substring(1);
+        String modified = parts[0] + "." + parts[1] + "." + signature;
         assertThatThrownBy(() -> service.parseUserId(modified)).isInstanceOf(RuntimeException.class);
     }
 }

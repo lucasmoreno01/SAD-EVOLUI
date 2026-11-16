@@ -12,8 +12,8 @@ import jakarta.validation.constraints.Size;
 
 public record DecisionRequest(
         @NotBlank @Size(max = 120) String name,
-        @NotNull @DecimalMin("0") @DecimalMax("1") BigDecimal impactWeight,
-        @NotNull @DecimalMin("0") @DecimalMax("1") BigDecimal urgencyWeight,
-        @NotNull @DecimalMin("0") @DecimalMax("1") BigDecimal frequencyWeight,
-        @NotNull @DecimalMin("0") @DecimalMax("1") BigDecimal effortWeight,
+        @NotNull @DecimalMin("0") @DecimalMax("10") BigDecimal impactWeight,
+        @NotNull @DecimalMin("0") @DecimalMax("10") BigDecimal urgencyWeight,
+        @NotNull @DecimalMin("0") @DecimalMax("10") BigDecimal frequencyWeight,
+        @NotNull @DecimalMin("0") @DecimalMax("10") BigDecimal effortWeight,
         @NotEmpty List<UUID> improvementIds) { }

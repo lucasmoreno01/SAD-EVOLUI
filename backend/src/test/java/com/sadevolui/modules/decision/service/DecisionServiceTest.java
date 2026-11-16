@@ -58,12 +58,16 @@ class DecisionServiceTest {
         });
         when(scoreRepository.findAllByRunIdOrderByRankingAsc(any())).thenAnswer(invocation -> savedScores.get());
 
-        var result = service.calculate(new DecisionRequest("Rodada", decimal("0.40"), decimal("0.20"), decimal("0.20"), decimal("0.20"),
+        var result = service.calculate(new DecisionRequest("Rodada", decimal("4"), decimal("2"), decimal("2"), decimal("2"),
                 List.of(UUID.randomUUID(), UUID.randomUUID())), userId);
 
         assertThat(result.ranking()).extracting(score -> score.title()).containsExactly("B", "A");
         assertThat(result.ranking().get(0).finalScore()).isEqualByComparingTo("0.84000000");
         assertThat(result.ranking().get(1).normalizedEffort()).isEqualByComparingTo("0.40000000");
+        assertThat(result.weights().impact()).isEqualByComparingTo("0.40000");
+        assertThat(result.weights().urgency()).isEqualByComparingTo("0.20000");
+        assertThat(result.weights().frequency()).isEqualByComparingTo("0.20000");
+        assertThat(result.weights().effort()).isEqualByComparingTo("0.20000");
     }
 
     private static BigDecimal decimal(String value) { return new BigDecimal(value); }

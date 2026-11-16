@@ -57,7 +57,6 @@ export function MainLayout() {
             <p>Os sinais dos usuários ajudam a encontrar o próximo passo.</p>
             <div className="callout-sparkline" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div>
           </div>
-          <div className="account-row"><span className="user-avatar">{user?.name.slice(0, 1).toUpperCase()}</span><div className="workspace-copy"><strong>{user?.name}</strong><span>{user?.email}</span></div><button className="icon-button logout-button" onClick={logout} aria-label="Sair"><LogOut size={16} /></button></div>
         </div>
       </aside>
 
@@ -65,8 +64,9 @@ export function MainLayout() {
         <header className="topbar">
           <div className="topbar-left">
             <button className="icon-button mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Abrir menu"><Menu size={20} /></button>
-            <div className="breadcrumb"><span>Espaço de trabalho</span><span className="breadcrumb-divider">/</span><strong>{currentPage}</strong></div>
+            <h1 className="topbar-title">{currentPage}</h1>
           </div>
+          <div className="topbar-account"><span className="user-avatar user-avatar--small">{user?.name.slice(0, 1).toUpperCase()}</span><div className="topbar-account-copy"><strong>{user?.name}</strong><span>{user?.email}</span></div><button className="icon-button logout-button" onClick={logout} aria-label="Sair da conta" title="Sair"><LogOut size={16} /></button></div>
         </header>
         <main className="page-content"><Outlet /></main>
         <footer className="page-footer"><span>© 2026 SAD Evolui</span><span>Decisões melhores começam com escuta.</span></footer>
