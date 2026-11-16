@@ -75,8 +75,8 @@ Comandos úteis: `npm run lint` e `npm run build`.
 - Cadastro e login com senha BCrypt e token JWT. Projetos, aplicativos, feedbacks, categorias personalizadas, análises, melhorias e decisões são isolados por conta.
 - Análises reproduzíveis: sentimento pela nota (1–2 negativo, 3 neutro, 4–5 positivo), categoria por regras de palavras-chave e grupos candidatos por similaridade Jaccard. A API identifica a versão do método; essas regras não são um modelo treinado. A classificação pode ser corrigida manualmente, mantendo o valor automático original.
 - Estatísticas descritivas: média, mediana, moda, mínimo, máximo, desvio padrão populacional, contagens por sentimento e categoria, evolução mensal e problemas agrupados. O dashboard aceita filtros `projectId`, `applicationId`, `from` e `to` em `/api/dashboard/summary`.
-- Melhorias com avaliações de impacto, urgência, frequência e esforço de 1 a 5 e origem/justificativa registrada.
-- Rodadas SAW com importâncias relativas definidas pelo gestor (0 a 10), normalizadas automaticamente para totalizar 1. Benefícios usam valor dividido pelo maior; esforço usa menor dividido pelo valor. Histórico guarda os pesos normalizados, dados originais, normalizações e pontuação.
+- Melhorias com impacto, urgência e esforço avaliados pelo gestor em escala de 1 a 5, com origem registrada. A frequência é calculada automaticamente pela quantidade de avaliações do aplicativo presentes no grupo de problemas associado; sem grupo vinculado, vale zero.
+- Rodadas SAW com importâncias relativas definidas pelo gestor (0 a 10), normalizadas automaticamente para totalizar 1. A frequência usa a contagem real de avaliações associadas ao grupo; benefícios usam valor dividido pelo maior e esforço usa menor dividido pelo valor. Histórico guarda os pesos normalizados, contagens, valores originais, normalizações e pontuação.
 - Categorias padrão: desempenho, autenticação, interface, navegação, estabilidade, funcionalidades e outros. Contas podem criar categorias próprias.
 
 Execute os testes do backend com `cd backend && mvn test`.

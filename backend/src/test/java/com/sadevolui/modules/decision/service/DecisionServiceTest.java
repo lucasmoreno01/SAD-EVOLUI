@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import com.sadevolui.modules.analysis.entity.IssueGroup;
+import com.sadevolui.modules.analysis.repository.IssueGroupItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,12 +32,13 @@ class DecisionServiceTest {
     @Mock DecisionRunRepository runRepository;
     @Mock DecisionScoreRepository scoreRepository;
     @Mock ImprovementRepository improvementRepository;
+    @Mock IssueGroupItemRepository issueGroupItemRepository;
     @Mock UserRepository userRepository;
     private DecisionService service;
 
     @BeforeEach
     void setUp() {
-        service = new DecisionService(runRepository, scoreRepository, improvementRepository, userRepository);
+        service = new DecisionService(runRepository, scoreRepository, improvementRepository, issueGroupItemRepository, userRepository);
     }
 
     @Test
@@ -44,11 +47,16 @@ class DecisionServiceTest {
         UserAccount user = new UserAccount("Gestora", "gestora@example.com", "hashed-password");
         Project project = new Project(user, "Projeto", null);
         ManagedApplication application = new ManagedApplication(project, "App", null);
-        Improvement first = new Improvement(application, null, "A", "Primeira", 5, 4, 3, 5, "Avaliação manual", ImprovementStatus.PROPOSED, user);
-        Improvement second = new Improvement(application, null, "B", "Segunda", 3, 5, 5, 2, "Avaliação manual", ImprovementStatus.PROPOSED, user);
+        IssueGroup firstGroup = org.mockito.Mockito.mock(IssueGroup.class);
+        IssueGroup secondGroup = org.mockito.Mockito.mock(IssueGroup.class);
+        when(firstGroup.getId()).thenReturn(UUID.randomUUID());
+        when(secondGroup.getId()).thenReturn(UUID.randomUUID());
+        Improvement first = new Improvement(application, firstGroup, "A", "Primeira", 5, 4, 5, "Avaliação manual", ImprovementStatus.PROPOSED, user);
+        Improvement second = new Improvement(application, secondGroup, "B", "Segunda", 3, 5, 2, "Avaliação manual", ImprovementStatus.PROPOSED, user);
         List<Improvement> alternatives = List.of(first, second);
         AtomicReference<List<DecisionScore>> savedScores = new AtomicReference<>(List.of());
         when(improvementRepository.findOwnedIds(anyList(), any())).thenReturn(alternatives);
+        when(issueGroupItemRepository.countFeedbacksForApplication(any(), any())).thenReturn(2L, 5L);
         when(userRepository.findById(userId)).thenReturn(java.util.Optional.of(user));
         when(runRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(scoreRepository.saveAll(anyList())).thenAnswer(invocation -> {
@@ -68,6 +76,9 @@ class DecisionServiceTest {
         assertThat(result.weights().urgency()).isEqualByComparingTo("0.20000");
         assertThat(result.weights().frequency()).isEqualByComparingTo("0.20000");
         assertThat(result.weights().effort()).isEqualByComparingTo("0.20000");
+        assertThat(result.frequencyBasis()).isEqualTo("LINKED_FEEDBACK_COUNT");
+        assertThat(result.ranking().get(0).frequency()).isEqualTo(5);
+        assertThat(result.ranking().get(1).frequency()).isEqualTo(2);
     }
 
     private static BigDecimal decimal(String value) { return new BigDecimal(value); }

@@ -3,6 +3,7 @@ package com.sadevolui.modules.decision.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import com.sadevolui.modules.analysis.repository.IssueGroupItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.sadevolui.modules.decision.dto.DecisionDtos.*;
@@ -24,10 +25,11 @@ public class DecisionService {
     private final DecisionRunRepository runRepository;
     private final DecisionScoreRepository scoreRepository;
     private final ImprovementRepository improvementRepository;
+    private final IssueGroupItemRepository issueGroupItemRepository;
     private final UserRepository userRepository;
 
-    public DecisionService(DecisionRunRepository runRepository, DecisionScoreRepository scoreRepository, ImprovementRepository improvementRepository, UserRepository userRepository) {
-        this.runRepository = runRepository; this.scoreRepository = scoreRepository; this.improvementRepository = improvementRepository; this.userRepository = userRepository;
+    public DecisionService(DecisionRunRepository runRepository, DecisionScoreRepository scoreRepository, ImprovementRepository improvementRepository, IssueGroupItemRepository issueGroupItemRepository, UserRepository userRepository) {
+        this.runRepository = runRepository; this.scoreRepository = scoreRepository; this.improvementRepository = improvementRepository; this.issueGroupItemRepository = issueGroupItemRepository; this.userRepository = userRepository;
     }
 
     public Run calculate(DecisionRequest request, UUID userId) {
@@ -42,23 +44,25 @@ public class DecisionService {
 
         int maxImpact = improvements.stream().mapToInt(Improvement::getImpact).max().orElseThrow();
         int maxUrgency = improvements.stream().mapToInt(Improvement::getUrgency).max().orElseThrow();
-        int maxFrequency = improvements.stream().mapToInt(Improvement::getFrequency).max().orElseThrow();
+        List<Candidate> candidates = improvements.stream().map(item -> new Candidate(item, frequencyCount(item))).toList();
+        int maxFrequency = candidates.stream().mapToInt(Candidate::frequencyCount).max().orElseThrow();
         int minEffort = improvements.stream().mapToInt(Improvement::getEffort).min().orElseThrow();
 
-        List<CalculatedScore> calculated = improvements.stream().map(item -> {
+        List<CalculatedScore> calculated = candidates.stream().map(candidate -> {
+            Improvement item = candidate.improvement();
             BigDecimal impact = ratio(item.getImpact(), maxImpact);
             BigDecimal urgency = ratio(item.getUrgency(), maxUrgency);
-            BigDecimal frequency = ratio(item.getFrequency(), maxFrequency);
+            BigDecimal frequency = maxFrequency == 0 ? BigDecimal.ZERO.setScale(SCALE) : ratio(candidate.frequencyCount(), maxFrequency);
             BigDecimal effort = ratio(minEffort, item.getEffort());
             BigDecimal score = impact.multiply(weights.impact()).add(urgency.multiply(weights.urgency()))
                     .add(frequency.multiply(weights.frequency())).add(effort.multiply(weights.effort())).setScale(SCALE, RoundingMode.HALF_UP);
-            return new CalculatedScore(item, impact, urgency, frequency, effort, score);
+            return new CalculatedScore(item, candidate.frequencyCount(), impact, urgency, frequency, effort, score);
         }).sorted(Comparator.comparing(CalculatedScore::score).reversed().thenComparing(item -> item.improvement().getTitle(), String.CASE_INSENSITIVE_ORDER)).toList();
 
         List<DecisionScore> snapshots = new ArrayList<>();
         for (int index = 0; index < calculated.size(); index++) {
             CalculatedScore item = calculated.get(index);
-            snapshots.add(new DecisionScore(run, item.improvement(), item.impact(), item.urgency(), item.frequency(), item.effort(), item.score(), index + 1));
+            snapshots.add(new DecisionScore(run, item.improvement(), item.frequencyCount(), item.impact(), item.urgency(), item.frequency(), item.effort(), item.score(), index + 1));
         }
         scoreRepository.saveAll(snapshots);
         return detail(run);
@@ -83,9 +87,19 @@ public class DecisionService {
         List<Score> ranking = scoreRepository.findAllByRunIdOrderByRankingAsc(run.getId()).stream().map(score -> new Score(
                 score.getImprovement().getId(), score.getImprovementTitle(), score.getImpactValue(), score.getUrgencyValue(), score.getFrequencyValue(), score.getEffortValue(),
                 score.getNormalizedImpact(), score.getNormalizedUrgency(), score.getNormalizedFrequency(), score.getNormalizedEffort(), score.getFinalScore(), score.getRanking())).toList();
-        return new Run(run.getId(), run.getName(), weights, run.getCreatedAt(), ranking,
+        String criteriaMeaning = "Impacto: gravidade e prejuízo à experiência. Urgência: necessidade temporal. "
+                + ("LINKED_FEEDBACK_COUNT".equals(run.getFrequencyBasis())
+                    ? "Frequência: contagem de avaliações pertencentes ao grupo de problemas associado e ao aplicativo da melhoria; não representa usuários distintos. Sem grupo, o valor é zero. "
+                    : "Frequência: avaliação manual histórica em escala de 1 a 5. ")
+                + "Esforço: complexidade e recursos estimados. Impacto, urgência e esforço são avaliados pelo gestor; a origem está registrada em cada melhoria.";
+        return new Run(run.getId(), run.getName(), weights, run.getFrequencyBasis(), run.getCreatedAt(), ranking,
                 "Benefício: valor da alternativa / maior valor; custo (esforço): menor valor / valor da alternativa.",
-                "Impacto: gravidade e prejuízo à experiência. Urgência: necessidade temporal. Frequência: recorrência nos feedbacks (não representa usuários distintos). Esforço: complexidade e recursos estimados. Escala de 1 a 5 informada pelo gestor; origem registrada em cada melhoria.");
+                criteriaMeaning);
+    }
+
+    private int frequencyCount(Improvement improvement) {
+        if (improvement.getIssueGroup() == null) return 0;
+        return Math.toIntExact(issueGroupItemRepository.countFeedbacksForApplication(improvement.getIssueGroup().getId(), improvement.getApplication().getId()));
     }
 
     private static BigDecimal ratio(int numerator, int denominator) {
@@ -110,5 +124,6 @@ public class DecisionService {
         return weight.divide(total, 5, RoundingMode.HALF_UP);
     }
     private record NormalizedWeights(BigDecimal impact, BigDecimal urgency, BigDecimal frequency, BigDecimal effort) { }
-    private record CalculatedScore(Improvement improvement, BigDecimal impact, BigDecimal urgency, BigDecimal frequency, BigDecimal effort, BigDecimal score) { }
+    private record Candidate(Improvement improvement, int frequencyCount) { }
+    private record CalculatedScore(Improvement improvement, int frequencyCount, BigDecimal impact, BigDecimal urgency, BigDecimal frequency, BigDecimal effort, BigDecimal score) { }
 }

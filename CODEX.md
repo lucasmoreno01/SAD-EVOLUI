@@ -154,7 +154,7 @@ Definir corretamente o tratamento de dados ausentes, notas inválidas e amostras
 - Descrição da melhoria proposta.
 - Registro de impacto esperado.
 - Registro de urgência.
-- Registro de frequência.
+- Frequência calculada automaticamente pelo número de feedbacks do aplicativo associado ao grupo de problemas vinculado.
 - Estimativa de esforço.
 - Acompanhamento do status.
 
@@ -173,9 +173,7 @@ Utilizar normalização adequada:
 - Benefício: valor da alternativa dividido pelo maior valor observado.
 - Custo: menor valor observado dividido pelo valor da alternativa.
 
-Calcular a pontuação final utilizando os pesos definidos pelo gestor.
-
-Validar que a soma dos pesos seja igual a 1 ou 100%, conforme a representação adotada.
+Calcular a pontuação final utilizando as importâncias relativas definidas pelo gestor. Normalizar os valores automaticamente para somarem 1; rejeitar somente quando todos os critérios tiverem importância zero.
 
 Apresentar:
 - Critérios utilizados.
@@ -213,12 +211,12 @@ Representa a gravidade do problema e o prejuízo causado à experiência dos usu
 Representa a necessidade de resolver o problema em determinado período.
 
 ### Frequência
-Representa a recorrência do problema nos feedbacks.
+Representa a quantidade de feedbacks do aplicativo presentes no grupo de problemas vinculado à melhoria. A contagem considera avaliações, não pessoas únicas; sem grupo associado, a frequência é zero. Novas avaliações entram na contagem após uma nova análise e a atualização do vínculo da melhoria ao grupo resultante.
 
 ### Esforço
 Representa a complexidade e os recursos necessários para implementar a melhoria.
 
-Utilizar inicialmente uma escala de 1 a 5, com descrições objetivas para cada nível.
+Impacto, urgência e esforço utilizam uma escala de 1 a 5, com descrições objetivas para cada nível. Frequência usa a contagem real das avaliações associadas ao grupo.
 
 Não atribuir valores arbitrários. Registrar a origem da avaliação e permitir intervenção do gestor.
 
