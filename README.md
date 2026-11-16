@@ -85,6 +85,10 @@ Execute os testes do backend com `cd backend && mvn test`.
 
 A API exige JWT em todas as rotas de gestão, exceto cadastro/login, Swagger e recebimento externo de feedbacks. Os recursos de domínio são filtrados pelo usuário do token.
 
+## Banco gerenciado no Neon
+
+Para usar PostgreSQL do Neon no perfil `prod`, configure `DATABASE_URL` com uma URL JDBC contendo host, porta, banco e `sslmode=require`, por exemplo `jdbc:postgresql://HOST:5432/DATABASE?sslmode=require`. Configure `DB_USER` e `DB_PASSWORD` separadamente no ambiente do serviço. No Neon, copie os valores de host, banco, usuário e senha em **Connect**; não coloque a senha na URL JDBC nem no repositório. O perfil local `dev` continua usando `DB_HOST`, `DB_PORT` e `DB_NAME`.
+
 ## Receber avaliações por API
 
 Sistemas externos podem registrar avaliações pelo endpoint `POST /api/integrations/feedbacks`. Configure `INTEGRATION_API_KEY` no `.env` com uma chave aleatória longa e compartilhe-a somente com a integração autorizada. O endpoint exige essa chave no header `X-API-Key`; sem ela, retorna `401`.
