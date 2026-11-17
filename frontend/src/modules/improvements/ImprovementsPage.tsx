@@ -29,7 +29,7 @@ export function ImprovementsPage() {
   const selectedGroup = groups.data?.groups.find((group) => group.id === form.issueGroupId)
   const linkedFeedbackCount = selectedGroup?.feedbackCount ?? (editing?.issueGroupId === form.issueGroupId ? editing.frequency : 0)
 
-  return <div className="workspace-page">
+  return <div className="workspace-page improvements-page">
     <section className="page-heading"><div><div className="heading-overline"><Lightbulb size={14} /> OPORTUNIDADES</div><h1>Melhorias</h1><p>Registre propostas com critérios explícitos para acompanhar e priorizar.</p></div>{!formOpen && <button className="button button--primary" onClick={beginCreate} disabled={!apps.data?.length}><Plus size={16} /> Nova melhoria</button>}</section>
     {!apps.isLoading && apps.data?.length === 0 && <div className="panel empty-state"><h2>Cadastre um aplicativo primeiro</h2><p>Uma melhoria deve estar vinculada a um aplicativo.</p></div>}
     {formOpen && <form className="panel editor-panel" onSubmit={submit}><div className="editor-heading"><h2>{editing ? 'Editar melhoria' : 'Nova oportunidade'}</h2><p>Impacto, urgência e esforço são avaliados por você. A frequência vem automaticamente das avaliações no grupo associado.</p></div>{error && <p className="form-error" role="alert">{error}</p>}<div className="form-grid">

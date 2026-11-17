@@ -29,7 +29,7 @@ export function DecisionsPage() {
   }
   function toggle(id: string) { setSelectedIds((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]) }
 
-  return <div className="workspace-page">
+  return <div className="workspace-page decisions-page">
     <section className="page-heading"><div><div className="heading-overline"><FileChartColumnIncreasing size={14} /> MÉTODO SAW</div><h1>Decisões</h1><p>Compare melhorias com pesos definidos pelo gestor e consulte o histórico das avaliações.</p></div></section>
     <form className="panel editor-panel" onSubmit={submit}>
       <div className="editor-heading"><h2>Nova rodada de priorização</h2><p>Indique a importância relativa de cada critério de 0 a 10. Não precisa somar: o sistema ajusta os valores automaticamente. Impacto, urgência e frequência são benefícios; no esforço, menor valor favorece a prioridade.</p></div>
